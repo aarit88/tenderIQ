@@ -91,7 +91,22 @@ body {
 }
 
 .logo-text { display: flex; flex-direction: column; }
-.logo-name { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+.logo-name { 
+  font-size: 1.15rem; 
+  font-weight: 700; 
+  color: var(--text-primary); 
+  letter-spacing: -0.02em; 
+  display: inline-block;
+}
+
+.hero-title {
+  font-size: 5rem;
+  font-weight: 800;
+  color: var(--accent-light);
+  text-shadow: 0 0 30px var(--accent);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
 .logo-tagline { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 
 .sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
