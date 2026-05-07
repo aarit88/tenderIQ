@@ -23,11 +23,11 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className="app-layout">
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <div className="main-area">
         <Header activePage={activePage} onSearch={setSearchQuery} />
-        <main className="content">
+        <main className="page-content">
           {renderPage()}
         </main>
       </div>

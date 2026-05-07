@@ -170,6 +170,8 @@ body {
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
 }
 
 .header-left { display: flex; align-items: center; gap: 16px; }

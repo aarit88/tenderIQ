@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:frontend": "vite",
+    "dev:backend": "cd backend && uvicorn backend.app.main:app --reload",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
