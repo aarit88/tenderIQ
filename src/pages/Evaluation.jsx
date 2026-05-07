@@ -120,6 +120,36 @@ export default function Evaluation({ search, preSelectedBidderId }) {
         </div>
       </div>
 
+      {/* Pre-Evaluation Checklist */}
+      {selectedBidder && bidders.find(b => b.id === selectedBidder)?.checklist_status && (
+        <div className="card" style={{ marginBottom: 24, border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="section-header">
+            <div className="section-title" style={{ fontSize: '1rem' }}>Pre-Evaluation Compliance Checklist</div>
+            <div className="section-subtitle">Verifying presence of mandatory supporting documents</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
+            {Object.entries(bidders.find(b => b.id === selectedBidder)?.checklist_status || {}).map(([doc, status], idx) => (
+              <div key={idx} style={{ 
+                padding: '12px', 
+                borderRadius: '8px', 
+                background: 'rgba(255,255,255,0.02)', 
+                border: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <span style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>{doc}</span>
+                {status === 'found' ? (
+                  <CheckCircle size={16} style={{ color: '#10b981' }} />
+                ) : (
+                  <AlertTriangle size={16} style={{ color: '#ef4444' }} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {evalLoading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Analyzing evaluation results for {bidders.find(b => b.id === selectedBidder)?.name}...</div>
       ) : (
@@ -167,8 +197,27 @@ export default function Evaluation({ search, preSelectedBidderId }) {
                         <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
                           {evalItem.reasoning}
                         </p>
-                        <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <FileText size={12}/> Cited from document page {evalItem.source_page}
+                        
+                        {evalItem.evidence_snippet && (
+                          <div style={{ marginTop: 12, fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', background: 'rgba(99, 102, 241, 0.05)', padding: '8px 12px', borderLeft: '3px solid #6366f1' }}>
+                            " {evalItem.evidence_snippet} "
+                          </div>
+                        )}
+
+                        {verdict === 'review' && evalItem.action_required && (
+                          <div style={{ marginTop: 12, background: 'rgba(245, 158, 11, 0.1)', border: '1px dashed #f59e0b', padding: '10px 12px', borderRadius: 6, color: '#f59e0b', fontSize: '0.8rem', fontWeight: 600 }}>
+                            <AlertTriangle size={14} style={{ marginRight: 6, display: 'inline' }}/> 
+                            OFFICER ACTION: {evalItem.action_required}
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: 12, fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <FileText size={12}/> {evalItem.source_document || 'Main Document'}
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            Page {evalItem.source_page}
+                          </span>
                         </div>
                       </div>
 

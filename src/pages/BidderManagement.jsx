@@ -24,38 +24,40 @@ export default function BidderManagement({ search, onViewEvidence }) {
     "Extraction Complete. Bidder profile generated."
   ];
 
-  const handleUpload = () => {
+  const handleUpload = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
     setUploading(true);
-    setProgress(0);
-    setExtractionLogs([]);
-    let logIndex = 0;
+    setProgress(5);
+    setExtractionLogs(["Initializing multi-document AI analysis..."]);
     
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { 
-          clearInterval(interval); 
-          setUploading(false); 
-          // Simulate adding a new bidder (this is for demo, could call api.createBidder)
-          const newBidder = {
-            id: `B-NEW-${Math.floor(Math.random()*1000)}`,
-            name: "New CRPF Bidder Ltd",
-            tender_id: "CRPF-CONST-2024",
-            status: "parsed",
-            match_score: 88.0,
-            documents: ["Bid_Package_V1.pdf", "Finance_Audit.pdf"]
-          };
-          setBidders(prev => [newBidder, ...prev]);
-          return 100; 
-        }
-        
-        if (Math.floor(p / 10) > logIndex && logIndex < extractionSteps.length) {
-          setExtractionLogs(prev => [...prev, extractionSteps[logIndex]]);
-          logIndex++;
-        }
-        
-        return p + Math.random() * 10;
+    const files = Array.from(fileList);
+    
+    try {
+      // For demo, we'll use a hardcoded tender ID or the first one available
+      const tenders = await api.getTenders();
+      if (tenders.length === 0) throw new Error("No tenders available to bid for.");
+      
+      const result = await api.uploadBidder({
+        tender_id: tenders[0].id,
+        name: files[0].name.split('.')[0] || "New Bidder",
+        files: files
       });
-    }, 150);
+      
+      setExtractionLogs(prev => [...prev, ...extractionSteps.slice(0, 5), "AI evaluation complete."]);
+      setProgress(100);
+      setTimeout(() => {
+        setUploading(false);
+        setBidders(prev => [result, ...prev]);
+      }, 1000);
+    } catch (error) {
+      console.error("Bidder upload failed:", error);
+      setExtractionLogs(prev => [...prev, "Error: Upload failed. Ensure a tender exists and Gemini key is set."]);
+      setUploading(false);
+    }
+  };
+
+  const onFileChange = (e) => {
+    handleUpload(e.target.files);
   };
 
   useEffect(() => {
@@ -94,9 +96,21 @@ export default function BidderManagement({ search, onViewEvidence }) {
           className={`upload-zone ${dragOver ? 'dragover' : ''}`}
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); handleUpload(); }}
-          onClick={handleUpload}
+          onDrop={e => { 
+            e.preventDefault(); 
+            setDragOver(false); 
+            if (e.dataTransfer.files.length > 0) handleUpload(e.dataTransfer.files); 
+          }}
+          onClick={() => document.getElementById('bidder-file-input').click()}
         >
+          <input 
+            id="bidder-file-input" 
+            type="file" 
+            style={{ display: 'none' }} 
+            onChange={onFileChange}
+            multiple
+            accept=".pdf,.docx,.jpg,.png"
+          />
           <div className="upload-zone-icon"><Users size={40} /></div>
           <div className="upload-zone-text">Drop bidder documents here — multi-file supported</div>
           <div className="upload-zone-hint">PDF, DOCX, Scanned images — Bidder name auto-detected</div>

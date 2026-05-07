@@ -40,36 +40,39 @@ export default function TenderUpload() {
     fetchData();
   }, []);
 
-  const handleUpload = () => {
+  const fileInputRef = useState(null);
+
+  const handleUpload = async (file) => {
+    if (!file) return;
     setUploading(true);
-    setProgress(0);
-    setExtractionLogs([]);
-    let logIndex = 0;
+    setProgress(10);
+    setExtractionLogs(["Initializing AI extraction..."]);
     
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { 
-          clearInterval(interval); 
-          setUploading(false); 
-          api.createTender({
-            title: "Construction of Multi-Level Parking",
-            department: "CRPF Civil Works",
-            value: "₹4.5 Cr"
-          }).then(() => {
-            api.getTenders().then(setTenders);
-          });
-          return 100; 
-        }
-        
-        // Add a log every 10% progress
-        if (Math.floor(p / 10) > logIndex && logIndex < extractionSteps.length) {
-          setExtractionLogs(prev => [...prev, extractionSteps[logIndex]]);
-          logIndex++;
-        }
-        
-        return p + Math.random() * 8;
+    try {
+      const result = await api.createTender({
+        title: "Construction of Multi-Level Parking", // Ideally these come from a form, but let's keep it simple
+        department: "CRPF Civil Works",
+        value: "₹4.5 Cr",
+        file: file
       });
-    }, 150);
+      
+      setExtractionLogs(prev => [...prev, "Reading tender document...", "AI identifying criteria...", "Criteria saved."]);
+      setProgress(100);
+      setTimeout(() => {
+        setUploading(false);
+        api.getTenders().then(setTenders);
+        if (result.id) api.getCriteria(result.id).then(setCriteria);
+      }, 1000);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setExtractionLogs(prev => [...prev, "Error: Upload failed. Check backend/Gemini API key."]);
+      setUploading(false);
+    }
+  };
+
+  const onFileChange = (e) => {
+    const file = e.target.files[0];
+    handleUpload(file);
   };
 
   const filtered = activeTab === 'all' ? criteria : criteria.filter(c => c.category.toLowerCase() === activeTab);
@@ -91,9 +94,20 @@ export default function TenderUpload() {
           className={`upload-zone ${dragOver ? 'dragover' : ''}`}
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); handleUpload(); }}
-          onClick={handleUpload}
+          onDrop={e => { 
+            e.preventDefault(); 
+            setDragOver(false); 
+            if (e.dataTransfer.files.length > 0) handleUpload(e.dataTransfer.files[0]); 
+          }}
+          onClick={() => document.getElementById('tender-file-input').click()}
         >
+          <input 
+            id="tender-file-input" 
+            type="file" 
+            style={{ display: 'none' }} 
+            onChange={onFileChange}
+            accept=".pdf,.docx"
+          />
           <div className="upload-zone-icon"><Upload size={40} /></div>
           <div className="upload-zone-text">Drag & drop tender PDF here, or click to browse</div>
           <div className="upload-zone-hint">Supports PDF, scanned PDFs (OCR), DOCX — Max 200MB</div>
@@ -105,6 +119,27 @@ export default function TenderUpload() {
           </div>
         )}
       </div>
+
+      {/* Extracted Checklist */}
+      {tenders.length > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div className="section-header">
+            <div className="section-title">Automated Document Checklist</div>
+            <div className="section-subtitle">AI-identified mandatory documents for this tender</div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>
+            {tenders[0].required_docs?.map((doc, idx) => (
+              <div key={idx} className="badge badge-gray" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }}></div>
+                {doc}
+              </div>
+            ))}
+            {(!tenders[0].required_docs || tenders[0].required_docs.length === 0) && (
+              <div className="section-subtitle">No specific checklist extracted yet.</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Existing Tenders */}
       <div className="card" style={{ marginBottom: 24 }}>

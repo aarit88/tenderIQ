@@ -5,6 +5,7 @@ const navItems = [
   { id: 'tenders', label: 'Tender Upload', icon: Upload },
   { id: 'bidders', label: 'Bidder Docs', icon: Users },
   { id: 'evaluation', label: 'Evaluation', icon: ClipboardCheck },
+  { id: 'consolidated', label: 'Summary Report', icon: FileText },
   { id: 'audit', label: 'Audit Trail', icon: Clock },
 ];
 

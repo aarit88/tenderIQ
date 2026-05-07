@@ -604,6 +604,42 @@ tbody tr:last-child td { border-bottom: none; }
   cursor: pointer;
 }
 
+.active-row {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-left: 3px solid #6366f1;
+}
+
+.btn-icon.active {
+  background: #6366f1;
+  color: white;
+}
+
+@media print {
+  .sidebar, .header, .btn, .filter-select, .nav-section-title, .tabs {
+    display: none !important;
+  }
+  .main-area {
+    margin-left: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    background: white !important;
+    color: black !important;
+  }
+  .table-container table th, .table-container table td {
+    color: black !important;
+    border-bottom: 1px solid #ddd !important;
+  }
+  .badge {
+    border: 1px solid #000 !important;
+    color: black !important;
+  }
+}
+
 .notif-item:hover {
   background: rgba(255,255,255,0.03);
 }

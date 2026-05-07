@@ -6,6 +6,7 @@ import TenderUpload from './pages/TenderUpload';
 import BidderManagement from './pages/BidderManagement';
 import Evaluation from './pages/Evaluation';
 import AuditTrail from './pages/AuditTrail';
+import ConsolidatedReport from './pages/ConsolidatedReport';
 
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -23,6 +24,7 @@ export default function App() {
       case 'tenders': return <TenderUpload search={searchQuery} />;
       case 'bidders': return <BidderManagement search={searchQuery} onViewEvidence={viewEvidence} />;
       case 'evaluation': return <Evaluation search={searchQuery} preSelectedBidderId={selectedBidderId} />;
+      case 'consolidated': return <ConsolidatedReport />;
       case 'audit': return <AuditTrail search={searchQuery} />;
       default: return <Dashboard onNavigate={setActivePage} search={searchQuery} />;
     }
