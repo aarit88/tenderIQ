@@ -13,6 +13,11 @@ class Tender(Base):
     status = Column(String, default="pending")
     value = Column(String)
     document_path = Column(String)
+    file_hash = Column(String)
+    required_docs = Column(JSON) # List of documents like ["GST", "ISO", "MSME"]
+    is_signed = Column(Boolean, default=False)
+    signed_by = Column(String, nullable=True)
+    signed_at = Column(DateTime, nullable=True)
 
     criteria = relationship("Criterion", back_populates="tender")
     bidders = relationship("Bidder", back_populates="tender")
@@ -39,7 +44,11 @@ class Bidder(Base):
     name = Column(String)
     status = Column(String, default="parsing")
     match_score = Column(Float, nullable=True)
+    is_disqualified = Column(Boolean, default=False)
+    disqualification_reason = Column(String, nullable=True)
     documents = Column(JSON) # List of document names
+    file_hashes = Column(JSON) # Map of filename to SHA-256
+    checklist_status = Column(JSON) # Map of doc_name -> "found" / "missing"
 
     tender = relationship("Tender", back_populates="bidders")
     evaluations = relationship("Evaluation", back_populates="bidder")
@@ -56,6 +65,9 @@ class Evaluation(Base):
     extracted_value = Column(String)
     reasoning = Column(Text)
     source_page = Column(Integer)
+    source_document = Column(String, nullable=True)
+    evidence_snippet = Column(Text, nullable=True)
+    action_required = Column(Text, nullable=True)
 
     bidder = relationship("Bidder", back_populates="evaluations")
 

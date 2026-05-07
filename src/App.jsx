@@ -6,17 +6,25 @@ import TenderUpload from './pages/TenderUpload';
 import BidderManagement from './pages/BidderManagement';
 import Evaluation from './pages/Evaluation';
 import AuditTrail from './pages/AuditTrail';
+import ConsolidatedReport from './pages/ConsolidatedReport';
 
 function MainApp() {
   const [activePage, setActivePage] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBidderId, setSelectedBidderId] = useState(null);
+
+  const viewEvidence = (bidderId) => {
+    setSelectedBidderId(bidderId);
+    setActivePage('evaluation');
+  };
 
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard': return <Dashboard onNavigate={setActivePage} search={searchQuery} />;
       case 'tenders': return <TenderUpload search={searchQuery} />;
-      case 'bidders': return <BidderManagement search={searchQuery} />;
-      case 'evaluation': return <Evaluation search={searchQuery} />;
+      case 'bidders': return <BidderManagement search={searchQuery} onViewEvidence={viewEvidence} />;
+      case 'evaluation': return <Evaluation search={searchQuery} preSelectedBidderId={selectedBidderId} />;
+      case 'consolidated': return <ConsolidatedReport />;
       case 'audit': return <AuditTrail search={searchQuery} />;
       default: return <Dashboard onNavigate={setActivePage} search={searchQuery} />;
     }
