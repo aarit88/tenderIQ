@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, Loader, Edit3, Trash2 } from 'lucide-react';
+import { Upload, CheckCircle, Loader, Edit3, Trash2, FileText } from 'lucide-react';
 import { api } from '../utils/api';
 
 export default function TenderUpload() {
@@ -10,6 +10,17 @@ export default function TenderUpload() {
   const [progress, setProgress] = useState(0);
   const [activeTab, setActiveTab] = useState('all');
   const [dragOver, setDragOver] = useState(false);
+  const [extractionLogs, setExtractionLogs] = useState([]);
+
+  const extractionSteps = [
+    "Reading tender document...",
+    "OCR Engine: Analyzing layout...",
+    "Identifying 'Evaluation Criteria' section...",
+    "Extracting Financial requirement...",
+    "Extracting Technical requirement...",
+    "Extracting Compliance requirements...",
+    "Verification complete."
+  ];
 
   useEffect(() => {
     const fetchData = async () => {

@@ -3,7 +3,7 @@ import { Users, CheckCircle, Loader, FileText, Eye, Download } from 'lucide-reac
 import { api } from '../utils/api';
 import { downloadBlob } from '../utils/downloadUtils';
 
-export default function BidderManagement() {
+export default function BidderManagement({ search, onViewEvidence }) {
   const [bidders, setBidders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dragOver, setDragOver] = useState(false);
@@ -179,7 +179,13 @@ export default function BidderManagement() {
             )}
 
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}><Eye size={14}/> View Evidence</button>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                style={{ flex: 1 }}
+                onClick={() => onViewEvidence(bidder.id)}
+              >
+                <Eye size={14}/> View Evidence
+              </button>
               <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => handleDownloadReport(bidder)}><Download size={14}/> Report</button>
             </div>
           </div>

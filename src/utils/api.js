@@ -7,6 +7,12 @@ export const api = {
     return response.json();
   },
 
+  getCriteria: async (tenderId) => {
+    const response = await fetch(`${API_BASE_URL}/tenders/${tenderId}/criteria`);
+    if (!response.ok) throw new Error('Failed to fetch criteria');
+    return response.json();
+  },
+
   getBidders: async () => {
     const response = await fetch(`${API_BASE_URL}/bidders`);
     if (!response.ok) throw new Error('Failed to fetch bidders');

@@ -3,9 +3,9 @@ import { CheckCircle, XCircle, AlertTriangle, FileText, ChevronDown, ChevronUp, 
 import { api } from '../utils/api';
 import { downloadBlob, generateEvaluationReport } from '../utils/downloadUtils';
 
-export default function Evaluation() {
+export default function Evaluation({ search, preSelectedBidderId }) {
   const [bidders, setBidders] = useState([]);
-  const [selectedBidder, setSelectedBidder] = useState('');
+  const [selectedBidder, setSelectedBidder] = useState(preSelectedBidderId || '');
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [evalLoading, setEvalLoading] = useState(false);
@@ -18,7 +18,9 @@ export default function Evaluation() {
         const data = await api.getBidders();
         const parsedBidders = data.filter(b => b.status === 'parsed');
         setBidders(parsedBidders);
-        if (parsedBidders.length > 0) {
+        if (preSelectedBidderId) {
+          setSelectedBidder(preSelectedBidderId);
+        } else if (parsedBidders.length > 0 && !selectedBidder) {
           setSelectedBidder(parsedBidders[0].id);
         }
       } catch (error) {
@@ -28,7 +30,7 @@ export default function Evaluation() {
       }
     };
     fetchBidders();
-  }, []);
+  }, [preSelectedBidderId]);
 
   useEffect(() => {
     if (!selectedBidder) return;
