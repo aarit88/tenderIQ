@@ -45,6 +45,18 @@ export const api = {
     return response.json();
   },
 
+  deleteTender: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/tenders/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete tender');
+    return response.json();
+  },
+
+  deleteBidder: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/bidders/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete bidder');
+    return response.json();
+  },
+
   createTender: async (tender) => {
     const formData = new FormData();
     formData.append('title', tender.title);
@@ -82,9 +94,69 @@ export const api = {
     return response.json();
   },
 
+  upsertEvaluation: async (bidderId, criterionId, verdict) => {
+    const response = await fetch(`${API_BASE_URL}/evaluations/upsert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bidder_id: bidderId, criterion_id: criterionId, verdict })
+    });
+    if (!response.ok) throw new Error('Failed to upsert evaluation');
+    return response.json();
+  },
+
+  updateCriterion: async (id, updates) => {
+    const response = await fetch(`${API_BASE_URL}/criteria/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!response.ok) throw new Error('Failed to update criterion');
+    return response.json();
+  },
+
+  deleteCriterion: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/criteria/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete criterion');
+    return response.json();
+  },
+
+  createCriterion: async (criterion) => {
+    const response = await fetch(`${API_BASE_URL}/criteria`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(criterion)
+    });
+    if (!response.ok) throw new Error('Failed to create criterion');
+    return response.json();
+  },
+
   seedData: async () => {
     const response = await fetch(`${API_BASE_URL}/seed`, { method: 'POST' });
     if (!response.ok) throw new Error('Failed to seed data');
+    return response.json();
+  },
+
+  getAiSettings: async () => {
+    const response = await fetch(`${API_BASE_URL}/settings/ai`);
+    if (!response.ok) throw new Error('Failed to fetch AI settings');
+    return response.json();
+  },
+
+  updateAiSettings: async (engine) => {
+    const response = await fetch(`${API_BASE_URL}/settings/ai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferred_engine: engine })
+    });
+    if (!response.ok) throw new Error('Failed to update AI settings');
+    return response.json();
+  },
+
+  reEvaluateBidder: async (bidderId, engine = null) => {
+    let url = `${API_BASE_URL}/bidders/${bidderId}/re-evaluate`;
+    if (engine) url += `?engine=${engine}`;
+    const response = await fetch(url, { method: 'POST' });
+    if (!response.ok) throw new Error('Failed to start re-evaluation');
     return response.json();
   }
 };

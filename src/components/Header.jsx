@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, Clock, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
+import { Search, Bell, Clock, AlertTriangle, FileText, CheckCircle, Database, Loader, Cpu } from 'lucide-react';
 import { api } from '../utils/api';
 
 const pageTitles = {
@@ -26,6 +26,43 @@ export default function Header({ activePage, onSearch }) {
     fetchNotifs();
   }, []);
 
+  const [seeding, setSeeding] = useState(false);
+  const handleSeed = async () => {
+    if (!window.confirm("This will populate the database with sample CRPF tender and bidder data. Continue?")) return;
+    setSeeding(true);
+    try {
+      await api.seedData();
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to seed data. Is the backend running?");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const [aiEngine, setAiEngine] = useState('auto');
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await api.getAiSettings();
+        setAiEngine(settings.preferred_engine);
+      } catch (err) {
+        console.error("Failed to fetch AI settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleEngineChange = async (newEngine) => {
+    setAiEngine(newEngine);
+    try {
+      await api.updateAiSettings(newEngine);
+    } catch (err) {
+      console.error("Failed to update AI engine", err);
+    }
+  };
+
   return (
     <header className="header">
       <div className="header-left">
@@ -42,6 +79,28 @@ export default function Header({ activePage, onSearch }) {
           </div>
           <div className="security-label">CRPF CLASSIFIED // LEVEL 3</div>
         </div>
+        <div className="engine-selector">
+          <Cpu size={14} style={{ opacity: 0.7 }} />
+          <select 
+            value={aiEngine} 
+            onChange={(e) => handleEngineChange(e.target.value)}
+            className="engine-select"
+            title="Global AI Engine Selection"
+          >
+            <option value="auto">Auto-Fallback</option>
+            <option value="gemini">Gemini 1.5 (Cloud)</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
+        </div>
+        <button 
+          className="btn btn-secondary btn-sm" 
+          onClick={handleSeed} 
+          disabled={seeding}
+          style={{ gap: 6, opacity: 0.8 }}
+        >
+          {seeding ? <Loader size={14} className="spin" /> : <Database size={14} />}
+          Seed Demo Data
+        </button>
         <div className="search-box">
           <Search size={16} />
           <input 

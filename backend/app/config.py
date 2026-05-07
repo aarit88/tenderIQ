@@ -10,6 +10,6 @@ class Config:
     OLLAMA_TEXT_MODEL = os.getenv("OLLAMA_TEXT_MODEL", "llama3.2")
     OLLAMA_VISION_MODEL = os.getenv("OLLAMA_VISION_MODEL", "llava")
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tenderiq.db")
-    UPLOAD_DIR = "backend/uploads"
+    UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 
 settings = Config()

@@ -68,6 +68,7 @@ class Evaluation(Base):
     source_document = Column(String, nullable=True)
     evidence_snippet = Column(Text, nullable=True)
     action_required = Column(Text, nullable=True)
+    ai_engine = Column(String, nullable=True) # gemini, ollama, manual, simulated
 
     bidder = relationship("Bidder", back_populates="evaluations")
 
