@@ -24,6 +24,9 @@ from .services import ai_service
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 app = FastAPI(title="TenderIQ API")
 
 # Enable CORS
@@ -38,7 +41,8 @@ app.add_middleware(
 UPLOAD_DIR = "backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@app.get("/")
+# API Routes
+@app.get("/api")
 async def root():
     return {"message": "TenderIQ API is running"}
 
@@ -324,6 +328,16 @@ def seed_data(db: Session = Depends(get_db)):
     db.add(models.AuditLog(user="System", action="seed", entity="Database", details="Database seeded with sample CRPF data.", type="action"))
     db.commit()
     return {"message": "CRPF Data Seeded Successfully"}
+
+# Serve Frontend Static Files
+# Note: In production, the 'dist' folder will be in the root
+dist_path = os.path.abspath(os.path.join(os.getcwd(), "dist"))
+if os.path.exists(dist_path):
+    app.mount("/", StaticFiles(directory=dist_path, html=True), name="static")
+
+    @app.exception_handler(404)
+    async def not_found_exception_handler(request, exc):
+        return FileResponse(os.path.join(dist_path, "index.html"))
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
