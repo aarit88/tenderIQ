@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -45,21 +45,23 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # Global settings (simplified for now, could be in DB)
 preferred_ai_engine = "auto" # auto, gemini, ollama
 
+# Create API Router
+api_router = APIRouter()
+
 # API Routes
-@app.get("/api")
-async def root():
+@api_router.get("/")
+async def api_root():
     return {"message": "TenderIQ API is running"}
 
-@app.get("/tenders")
+@api_router.get("/tenders")
 def get_tenders(db: Session = Depends(get_db)):
     return db.query(models.Tender).all()
 
-@app.get("/tenders/{tender_id}/criteria")
+@api_router.get("/tenders/{tender_id}/criteria")
 def get_criteria(tender_id: str, db: Session = Depends(get_db)):
     return db.query(models.Criterion).filter(models.Criterion.tender_id == tender_id).all()
 
-
-@app.post("/evaluations/upsert")
+@api_router.post("/evaluations/upsert")
 def upsert_evaluation(data: dict, db: Session = Depends(get_db)):
     bidder_id = data.get("bidder_id")
     criterion_id = data.get("criterion_id")
@@ -94,7 +96,7 @@ def upsert_evaluation(data: dict, db: Session = Depends(get_db)):
     
     return _perform_verdict_update(evaluation, verdict, db)
 
-@app.put("/evaluations/{eval_id}")
+@api_router.put("/evaluations/{eval_id}")
 def update_evaluation(eval_id: int, verdict: str, db: Session = Depends(get_db)):
     evaluation = db.query(models.Evaluation).filter(models.Evaluation.id == eval_id).first()
     if not evaluation:
@@ -102,15 +104,15 @@ def update_evaluation(eval_id: int, verdict: str, db: Session = Depends(get_db))
     
     return _perform_verdict_update(evaluation, verdict, db)
 
-@app.get("/bidders")
+@api_router.get("/bidders")
 def get_bidders(db: Session = Depends(get_db)):
     return db.query(models.Bidder).all()
 
-@app.get("/evaluations/{bidder_id}")
+@api_router.get("/evaluations/{bidder_id}")
 def get_evaluations(bidder_id: str, db: Session = Depends(get_db)):
     return db.query(models.Evaluation).filter(models.Evaluation.bidder_id == bidder_id).all()
 
-@app.get("/tenders/{tender_id}/summary")
+@api_router.get("/tenders/{tender_id}/summary")
 def get_tender_summary(tender_id: str, db: Session = Depends(get_db)):
     tender = db.query(models.Tender).filter(models.Tender.id == tender_id).first()
     if not tender: raise HTTPException(404, "Tender not found")
@@ -142,7 +144,7 @@ def get_tender_summary(tender_id: str, db: Session = Depends(get_db)):
         "bidders": summary
     }
 
-@app.post("/tenders/{tender_id}/sign")
+@api_router.post("/tenders/{tender_id}/sign")
 def sign_tender(tender_id: str, officer_name: str, db: Session = Depends(get_db)):
     tender = db.query(models.Tender).filter(models.Tender.id == tender_id).first()
     if not tender: raise HTTPException(404, "Tender not found")
@@ -155,15 +157,15 @@ def sign_tender(tender_id: str, officer_name: str, db: Session = Depends(get_db)
     db.commit()
     return {"message": "Tender signed off successfully"}
 
-@app.get("/audit")
+@api_router.get("/audit")
 def get_audit(db: Session = Depends(get_db)):
     return db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).all()
 
-@app.get("/settings/ai")
+@api_router.get("/settings/ai")
 def get_ai_settings():
     return {"preferred_engine": preferred_ai_engine}
 
-@app.post("/settings/ai")
+@api_router.post("/settings/ai")
 def update_ai_settings(data: dict):
     global preferred_ai_engine
     engine = data.get("preferred_engine")
@@ -172,7 +174,7 @@ def update_ai_settings(data: dict):
     preferred_ai_engine = engine
     return {"preferred_engine": preferred_ai_engine}
 
-@app.get("/api/health/ollama")
+@api_router.get("/health/ollama")
 async def check_ollama_health():
     try:
         import requests
@@ -201,7 +203,7 @@ def _recompute_bidder_score(bidder, db) -> float:
     return round((eligible_count / total_criteria) * 100, 1)
 
 
-@app.post("/criteria")
+@api_router.post("/criteria")
 def create_criterion(criterion: dict, db: Session = Depends(get_db)):
     # criterion should have tender_id, category, name, threshold, mandatory
     new_crit = models.Criterion(
@@ -219,7 +221,7 @@ def create_criterion(criterion: dict, db: Session = Depends(get_db)):
     db.refresh(new_crit)
     return new_crit
 
-@app.put("/criteria/{criterion_id}")
+@api_router.put("/criteria/{criterion_id}")
 def update_criterion(criterion_id: str, updates: dict, db: Session = Depends(get_db)):
     crit = db.query(models.Criterion).filter(models.Criterion.id == criterion_id).first()
     if not crit: raise HTTPException(404, "Criterion not found")
@@ -231,7 +233,7 @@ def update_criterion(criterion_id: str, updates: dict, db: Session = Depends(get
     db.commit()
     return crit
 
-@app.delete("/criteria/{criterion_id}")
+@api_router.delete("/criteria/{criterion_id}")
 def delete_criterion(criterion_id: str, db: Session = Depends(get_db)):
     crit = db.query(models.Criterion).filter(models.Criterion.id == criterion_id).first()
     if not crit: raise HTTPException(404, "Criterion not found")
@@ -321,7 +323,7 @@ async def process_tender_background(tender_id: str, file_path: str):
     finally:
         db.close()
 
-@app.post("/tenders/upload")
+@api_router.post("/tenders/upload")
 async def upload_tender(
     background_tasks: BackgroundTasks,
     title: str = Form(...),
@@ -489,7 +491,7 @@ async def process_bidder_background(bidder_id: str, tender_id: str, saved_files:
     finally:
         db.close()
 
-@app.post("/bidders/upload")
+@api_router.post("/bidders/upload")
 async def upload_bidder(
     background_tasks: BackgroundTasks,
     tender_id: str = Form(...),
@@ -520,7 +522,7 @@ async def upload_bidder(
     
     return bidder
 
-@app.post("/bidders/{bidder_id}/re-evaluate")
+@api_router.post("/bidders/{bidder_id}/re-evaluate")
 async def re_evaluate_bidder(
     bidder_id: str,
     background_tasks: BackgroundTasks,
@@ -542,7 +544,7 @@ async def re_evaluate_bidder(
     
     return {"message": f"Re-evaluation started using {engine or 'default settings'}"}
 
-@app.delete("/tenders/{tender_id}")
+@api_router.delete("/tenders/{tender_id}")
 async def delete_tender(tender_id: str, db: Session = Depends(get_db)):
     tender = db.query(models.Tender).filter(models.Tender.id == tender_id).first()
     if not tender:
@@ -577,7 +579,7 @@ async def delete_tender(tender_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Tender deleted successfully"}
 
-@app.delete("/bidders/{bidder_id}")
+@api_router.delete("/bidders/{bidder_id}")
 async def delete_bidder(bidder_id: str, db: Session = Depends(get_db)):
     bidder = db.query(models.Bidder).filter(models.Bidder.id == bidder_id).first()
     if not bidder:
@@ -665,10 +667,13 @@ def perform_seed(db: Session):
     db.add(models.AuditLog(user="System", action="seed", entity="Database", details="Database seeded with CRPF demo data. L&T: 100%, GMR: 75%.", type="action"))
     db.commit()
 
-@app.post("/seed")
+@api_router.post("/seed")
 def seed_data(db: Session = Depends(get_db)):
     perform_seed(db)
     return {"message": "CRPF Data Seeded Successfully"}
+
+# Include Router
+app.include_router(api_router, prefix="/api")
 
 @app.on_event("startup")
 def auto_seed():
@@ -701,3 +706,4 @@ if os.path.exists(dist_path):
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("backend.app.main:app", host="0.0.0.0", port=port, reload=True)
+

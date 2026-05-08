@@ -11,11 +11,17 @@ export default function ConsolidatedReport() {
   const [comparingBidders, setComparingBidders] = useState([]);
 
   useEffect(() => {
-    api.getTenders().then(data => {
-      setTenders(data);
-      if (data.length > 0) setSelectedTender(data[0].id);
-      setLoading(false);
-    });
+    api.getTenders()
+      .then(data => {
+        setTenders(data);
+        if (data.length > 0) setSelectedTender(data[0].id);
+      })
+      .catch(error => {
+        console.error("Error fetching tenders:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const fetchSummary = async () => {
