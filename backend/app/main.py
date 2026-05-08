@@ -600,8 +600,7 @@ async def delete_bidder(bidder_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Bidder deleted successfully"}
 
-@app.post("/seed")
-def seed_data(db: Session = Depends(get_db)):
+def perform_seed(db: Session):
     db.query(models.Evaluation).delete()
     db.query(models.Bidder).delete()
     db.query(models.Criterion).delete()
@@ -662,9 +661,31 @@ def seed_data(db: Session = Depends(get_db)):
     for e in gmr_evals:
         db.add(models.Evaluation(bidder_id="B-GA", **e))
 
+    print(f"Seeding completed. Tenders: {db.query(models.Tender).count()}, Bidders: {db.query(models.Bidder).count()}")
     db.add(models.AuditLog(user="System", action="seed", entity="Database", details="Database seeded with CRPF demo data. L&T: 100%, GMR: 75%.", type="action"))
     db.commit()
+
+@app.post("/seed")
+def seed_data(db: Session = Depends(get_db)):
+    perform_seed(db)
     return {"message": "CRPF Data Seeded Successfully"}
+
+@app.on_event("startup")
+def auto_seed():
+    db = SessionLocal()
+    try:
+        tender_count = db.query(models.Tender).count()
+        if tender_count == 0:
+            print(">>> DATABASE EMPTY: Auto-seeding CRPF demo data...")
+            perform_seed(db)
+            print(">>> Auto-seeding successful.")
+        else:
+            print(f">>> DATABASE FOUND: {tender_count} tenders existing. Skipping auto-seed.")
+    except Exception as e:
+        print(f">>> Auto-seeding FAILED: {e}")
+    finally:
+        db.close()
+
 
 
 # Serve Frontend Static Files

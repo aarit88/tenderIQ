@@ -27,7 +27,7 @@ COPY --from=frontend-builder /app/dist ./dist
 
 # Set environment variables
 ENV PORT=8000
-ENV DATABASE_URL=sqlite:///./tenderiq.db
+ENV DATABASE_URL=sqlite:///./backend/tenderiq.db
 
 # Expose the port
 EXPOSE 8000

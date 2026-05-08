@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Use Postgres if DATABASE_URL is provided, otherwise fallback to local SQLite
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tenderiq.db")
+db_url = os.getenv("DATABASE_URL")
+if not db_url:
+    db_url = "sqlite:///./tenderiq.db"
+SQLALCHEMY_DATABASE_URL = db_url
 
 # Fix for Render/Heroku where DATABASE_URL starts with postgres:// instead of postgresql://
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
